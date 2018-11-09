@@ -16,21 +16,37 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellType;
 
+/**
+ * @author lichunfeng
+ * @date 2018-11-09
+ */
 public class Main {
-
-
+    //jar当前目录下的配置文件
+    private static Properties curProperties;
+    private static String curPath;
+    static {
+        curProperties = new Properties();
+        String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        curPath = path.substring(0, path.lastIndexOf("/") + 1);
+        try {
+            curProperties
+                .load(new InputStreamReader(new BufferedInputStream(new FileInputStream(curPath.concat("/employee.properties"))),"utf-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String[] args) {
-        List<String> strings=getFile("D:\\sales");
+        List<String> strings=getFile(curPath);
         int i=0;
         for (String excel_url:strings) {
             try {
-                Properties properties = new Properties();
+            /*    Properties properties = new Properties();
 
                 InputStream in = new BufferedInputStream(new FileInputStream("D:\\sales\\employee.properties"));
-                properties.load(new InputStreamReader(in, "utf-8"));
+                properties.load(new InputStreamReader(in, "utf-8"));*/
                 //获取key对应的value值
 
-                xlsx_reader(excel_url, properties,i++);
+                xlsx_reader(excel_url, curProperties,i++);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -42,19 +58,14 @@ public class Main {
     //excel_name为文件名，arg为需要查询的列号
     //返回二维字符串数组
     static ArrayList<ArrayList<String>> xlsx_reader(String excel_url, Properties properties,int n) throws IOException {
-        FileOutputStream excelFileOutPutStream = new FileOutputStream("D:\\sales\\outPut_"+n+".xls");
+        FileOutputStream excelFileOutPutStream = new FileOutputStream(curPath+"\\outPut_"+n+".xls");
 
         //读取xlsx文件
-        HSSFWorkbook HSSfWorkbook = null;
+        HSSFWorkbook HSSfWorkbook ;
         //寻找目录读取文件
         File excelFile = new File(excel_url);
         InputStream is = new FileInputStream(excelFile);
         HSSfWorkbook = new HSSFWorkbook(is);
-
-        if (HSSfWorkbook == null) {
-            System.out.println("未读取到内容,请检查路径！");
-            return null;
-        }
 
         ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
         HSSFSheet HSSfSheet = HSSfWorkbook.getSheetAt(0);
@@ -125,7 +136,7 @@ public class Main {
         return str.replaceAll("[\\s\\?]", "").replace("　", "");
     }
 
-    static double getTC(double sum, int type) {
+    private static double getTC(double sum, int type) {
         if (type == 1) {
             //提成1
             double tc1 = 0;
@@ -165,7 +176,9 @@ public class Main {
                 tc3 = 20000 * 0.08 + (35000 - 20000) * 0.1 + (50000 - 35000) * 0.13 + (sum - 50000) * 0.2;
             }
             return tc3;
-        }else if (type == 4) {//尉团队
+        }
+        //尉团队
+        else if (type == 4) {
             //提成4
             double tc4 = 0;
             if (sum < 15000) {
@@ -186,7 +199,6 @@ public class Main {
 
     static List<String> getFile(String directoryPath) {
         List<String> strings=new ArrayList<>();
-        List<String> list = new ArrayList<String>();
         File baseFile = new File(directoryPath);
 
         File[] files = baseFile.listFiles();
@@ -194,7 +206,7 @@ public class Main {
             if (!file.isDirectory()) {
                 String name=file.getName();
                 String[] names=name.split("\\.");
-                if(names.length>=2 &&names[0].contains("职员销售")&&names[names.length-1].equals("xls")){
+                if(names.length>=2 &&names[0].contains("职员销售")&&"xls".equals(names[names.length-1])){
                     strings.add(directoryPath+"\\"+ name);
                 }
             }
